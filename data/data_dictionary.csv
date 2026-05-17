@@ -1,0 +1,30 @@
+table,column,description,example,rules
+customers,customer_id,Identificador de cliente a nivel orden. Imita el patron de Olist donde un mismo comprador puede aparecer con varios customer_id.,col_customer_0000123,Llave primaria de customers. Debe ser unica. Se une con orders.customer_id. No usar para medir recompra.
+customers,customer_unique_id,Identificador persistente de persona/comprador.,col_unique_000045,"Usar para RFM, frecuencia, recompra y segmentacion. Puede repetirse en varias filas de customers."
+customers,customer_city,Ciudad del cliente en Colombia.,Medellin,Puede tener nulos controlados. Normalizar texto antes de agrupar.
+customers,customer_department,Departamento del cliente.,Antioquia,"Puede tener nulos controlados. Sirve para filtros, KPIs y visualizaciones geograficas simples."
+customers,customer_postal_code_prefix,Prefijo postal sintetico de tres digitos.,050,"Puede tener nulos controlados. Tratar como texto, no como numero."
+orders,order_id,Identificador unico de orden.,col_order_0000123,Llave primaria de orders. Se une con order_items.order_id y order_payments.order_id.
+orders,customer_id,Cliente asociado a la orden.,col_customer_0000123,Llave foranea hacia customers.customer_id. Cada orden apunta a un customer_id.
+orders,order_status,Estado operativo de la orden.,delivered,"Valores esperados: delivered, canceled, returned, shipped, processing, payment_pending. Para ventas efectivas, KPIs, RFM y recompra base usar delivered."
+orders,order_purchase_timestamp,Fecha y hora de compra.,2024-08-15 14:32:10,"Convertir con pd.to_datetime. Base para series, cohortes, RFM y split temporal."
+orders,order_approved_at,Fecha y hora de aprobacion del pago/orden.,2024-08-15 15:20:10,Puede ser nula si la orden queda pendiente. No usar como feature si no estaria disponible en el momento de prediccion definido.
+orders,order_delivered_carrier_date,Fecha en que la orden pasa al transportador.,2024-08-17 09:20:10,"Puede ser nula en canceladas, pendientes o en proceso. Util para explicar ciclo logistico, no siempre para modelar."
+orders,order_delivered_customer_date,Fecha en que el cliente recibe la orden.,2024-08-21 18:20:10,"Puede ser nula. Para delivered, algunos nulos son intencionales para limpieza. Cuidado con leakage si se predice antes de entrega."
+orders,order_estimated_delivery_date,Fecha prometida o estimada de entrega.,2024-08-22 14:32:10,Puede ser nula en algunas cancelaciones. Sirve para calcular atraso si se analiza experiencia post-entrega.
+orders,currency,Moneda de la orden.,COP,Valor esperado: COP. Mantener para trazabilidad aunque no se use en calculos.
+order_items,order_id,Orden a la que pertenece el item.,col_order_0000123,Llave foranea hacia orders.order_id. Es una relacion 1:N; agregar a grano orden antes de unir.
+order_items,order_item_id,Numero de linea dentro de la orden.,1,Junto con order_id identifica una linea de item. No es unico globalmente.
+order_items,product_id,Identificador sintetico de producto.,col_prod_00321,Puede incluir productos raros tipo col_rare_prod_0007 para long tail. No existe tabla de productos en el core de 4 CSV.
+order_items,seller_id,Identificador sintetico de vendedor/tienda.,col_seller_0042,Sirve para agregaciones simples. No hay tabla sellers en el core.
+order_items,product_category,Categoria principal del producto.,tecnologia,Puede tener nulos controlados. Usar unknown o imputacion simple segun clase.
+order_items,shipping_limit_date,Fecha limite interna para despacho del item.,2024-08-18,Convertir a fecha. Puede compararse con fechas de orden si se quiere explicar ciclo operativo.
+order_items,price,Precio del item en COP.,249900.00,Numerico. Incluye outliers controlados de valor alto. No incluye flete.
+order_items,freight_value,Valor de flete asociado al item en COP.,15800.00,Numerico con nulos controlados. Agregar por orden antes de unir.
+order_items,currency,Moneda del item y flete.,COP,Valor esperado: COP.
+order_payments,order_id,Orden asociada al pago.,col_order_0000123,Llave foranea hacia orders.order_id. Una orden puede tener uno o varios pagos.
+order_payments,payment_sequential,Secuencia de pago dentro de la orden.,1,"Junto con order_id identifica el pago dentro de la orden, salvo duplicados exactos intencionales."
+order_payments,payment_type,Medio de pago usado.,tarjeta_credito,"Valores esperados: tarjeta_credito, transferencia, tarjeta_debito, contra_entrega, bono_regalo, credito_bnpl. Puede tener nulos controlados."
+order_payments,payment_installments,Numero de cuotas.,6,Para tarjeta_credito y credito_bnpl puede ser mayor a 1. En otros medios normalmente es 1. Puede tener nulos controlados.
+order_payments,payment_value,Valor pagado en COP.,359900.00,"Numerico. Para ventas y monetary, sumar pagos despues de eliminar/revisar duplicados exactos y filtrar ordenes delivered."
+order_payments,currency,Moneda del pago.,COP,Valor esperado: COP.

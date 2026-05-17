@@ -1,0 +1,13 @@
+[project]
+name = "spike-vscode-ia-datos"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "nbformat>=5.10.4",
+    "pandas>=3.0.3",
+    "plotly>=6.7.0",
+    "scikit-learn>=1.8.0",
+    "streamlit>=1.57.0",
+]
