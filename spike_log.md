@@ -60,3 +60,4 @@
 - Enseñar a los estudiantes que Gemini es más robusto en lógica de negocio pero Codex es más rápido en generación de estructura.
 - Utilizar el "Método del Codo" automatizado en KMeans para dar rigor profesional al análisis.
 - Más notas leer el archivo de comentarios de JP.
+- El deploy es sencillo pero hay que conectar streamlit con github y que el repo esté público. Este es mi [app](https://spike-vscode-ia-datos-juapatral-20260516.streamlit.app/)

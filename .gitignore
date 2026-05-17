@@ -8,3 +8,10 @@ wheels/
 
 # Virtual environments
 .venv
+
+# zip files
+*.zip
+
+# resultados
+resultados_spikes/*
+
