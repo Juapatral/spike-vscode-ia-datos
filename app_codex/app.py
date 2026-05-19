@@ -22,7 +22,7 @@ from rfm_kmeans_analysis import (  # noqa: E402
 
 
 st.set_page_config(
-    page_title="Ventas y Segmentos RFM",
+    page_title="Análisis de Ventas y Clientes",
     page_icon="bar_chart",
     layout="wide",
 )
@@ -57,7 +57,7 @@ def build_monthly_sales(delivered: pd.DataFrame) -> pd.DataFrame:
         monthly["order_purchase_timestamp"].dt.to_period("M").dt.to_timestamp()
     )
 
-    return (
+    monthly_sales = (
         monthly.groupby("purchase_month", as_index=False)
         .agg(
             sales=("monetary", "sum"),
@@ -66,6 +66,8 @@ def build_monthly_sales(delivered: pd.DataFrame) -> pd.DataFrame:
         )
         .sort_values("purchase_month")
     )
+    monthly_sales["avg_ticket"] = monthly_sales["sales"] / monthly_sales["orders"]
+    return monthly_sales
 
 
 def show_kpis(delivered: pd.DataFrame) -> None:
@@ -107,8 +109,26 @@ def show_sales_tab(delivered: pd.DataFrame, department: str) -> None:
     fig.update_layout(template="plotly_white", hovermode="x unified")
     st.plotly_chart(fig, use_container_width=True)
 
+    fig_ticket = px.line(
+        monthly_sales,
+        x="purchase_month",
+        y="avg_ticket",
+        markers=True,
+        title=f"Ticket promedio por mes - {department}",
+        labels={
+            "purchase_month": "Mes",
+            "avg_ticket": "Ticket promedio COP",
+        },
+        hover_data={"avg_ticket": ":,.0f"},
+    )
+    fig_ticket.update_layout(template="plotly_white", hovermode="x unified")
+    st.plotly_chart(fig_ticket, use_container_width=True)
+
     st.dataframe(
-        monthly_sales.assign(sales=monthly_sales["sales"].round(0)),
+        monthly_sales.assign(
+            sales=monthly_sales["sales"].round(0),
+            avg_ticket=monthly_sales["avg_ticket"].round(0),
+        ),
         use_container_width=True,
         hide_index=True,
     )
@@ -125,6 +145,8 @@ def show_segments_tab(delivered: pd.DataFrame, segments: pd.DataFrame) -> None:
     if scoped_segments.empty:
         st.info("No hay segmentos para el filtro seleccionado.")
         return
+
+    scoped_segments["segment_name"] = "Segmento " + scoped_segments["cluster"].astype(str)
 
     summary = (
         scoped_segments.groupby(["cluster", "segment_name"], as_index=False)
@@ -179,11 +201,7 @@ def show_segments_tab(delivered: pd.DataFrame, segments: pd.DataFrame) -> None:
 
 
 def main() -> None:
-    st.title("Analisis de ventas y segmentos")
-    st.warning(
-        "Advertencia: este dashboard usa un dataset sintetico. "
-        "Los resultados sirven para exploracion y prototipado, no para decisiones reales."
-    )
+    st.title("Análisis de Ventas y Clientes")
 
     order_level, segments = load_model_data()
 
@@ -200,6 +218,10 @@ def main() -> None:
 
     with segments_tab:
         show_segments_tab(delivered, segments)
+
+    st.caption(
+        "Dataset para fines educativos. No representa datos reales del mercado colombiano."
+    )
 
 
 if __name__ == "__main__":
