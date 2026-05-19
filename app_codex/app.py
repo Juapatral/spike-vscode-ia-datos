@@ -40,6 +40,17 @@ def format_cop(value: float) -> str:
     return f"${value:,.0f} COP"
 
 
+def format_segment_name(cluster: int) -> str:
+    segment_names = {
+        0: "Nuevos",
+        1: "Dormidos",
+        2: "VIP",
+        3: "Leales que se enfrían",
+        4: "Ocasionales",
+    }
+    return segment_names.get(int(cluster), f"Segmento {cluster}")
+
+
 def get_delivered_orders(order_level: pd.DataFrame, department: str) -> pd.DataFrame:
     delivered = order_level.loc[order_level["order_status"] == "delivered"].copy()
     delivered["customer_department"] = delivered["customer_department"].fillna("unknown")
@@ -135,7 +146,7 @@ def show_sales_tab(delivered: pd.DataFrame, department: str) -> None:
 
 
 def show_segments_tab(delivered: pd.DataFrame, segments: pd.DataFrame) -> None:
-    st.subheader("Segmentos RFM + KMeans")
+    st.subheader("Segmentación de clientes")
 
     customers_in_scope = delivered["customer_unique_id"].dropna().unique()
     scoped_segments = segments.loc[
@@ -146,7 +157,7 @@ def show_segments_tab(delivered: pd.DataFrame, segments: pd.DataFrame) -> None:
         st.info("No hay segmentos para el filtro seleccionado.")
         return
 
-    scoped_segments["segment_name"] = "Segmento " + scoped_segments["cluster"].astype(str)
+    scoped_segments["segment_name"] = scoped_segments["cluster"].apply(format_segment_name)
 
     summary = (
         scoped_segments.groupby(["cluster", "segment_name"], as_index=False)
@@ -212,7 +223,7 @@ def main() -> None:
 
     delivered = get_delivered_orders(order_level, department)
 
-    sales_tab, segments_tab = st.tabs(["Ventas por mes", "Segmentos RFM"])
+    sales_tab, segments_tab = st.tabs(["Ventas por mes", "Segmentación de clientes"])
     with sales_tab:
         show_sales_tab(delivered, department)
 
